@@ -26,4 +26,8 @@ class Product extends Model
         return $query->whereColumn('stock_quantity', '<', 'low_stock_threshold')
             ->where('status', ProductStatus::Active->value);
     }
+    public function isLowStock(): bool
+    {
+        return $this->stock_quantity < $this->low_stock_threshold;
+    }
 }
