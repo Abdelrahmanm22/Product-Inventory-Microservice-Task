@@ -23,6 +23,7 @@ trait ApiResponseTrait
         $response = [
             'success' => false,
             'message' => $message,
+            'status' => $status,
         ];
         if(!is_null($errors)){
             $response['errors'] = $errors;
