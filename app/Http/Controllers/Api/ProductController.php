@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\AdjustStockAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoreProductRequest;
 use App\Http\Requests\Api\UpdateProductRequest;
@@ -16,7 +17,7 @@ use Illuminate\Http\JsonResponse;
 class ProductController extends Controller
 {
     use ApiResponseTrait;
-    public function __construct(protected ProductRepositoryInterface $repository)
+    public function __construct(protected ProductRepositoryInterface $repository,private readonly AdjustStockAction $adjustStockAction)
     {
     }
     public function index(Request $request) : JsonResponse
@@ -88,6 +89,30 @@ class ProductController extends Controller
         } catch (\Throwable $e) {
             Log::error('Failed to delete product', ['id' => $id, 'error' => $e->getMessage()]);
             return $this->errorResponse('Failed to delete product.', 500);
+        }
+    }
+    public function adjustStock(Request $request,string $id) : JsonResponse
+    {
+        $request->validate(['quantity' => 'required|integer|not_in:0']);
+        try {
+            $product = $this->adjustStockAction->execute($id,$request->integer('quantity'));
+            $this->invalidateCache();
+            return $this->successResponse(new ProductResource($product),"Stock adjusted successfully");
+        }catch (\RuntimeException $exception){
+            return $this->errorResponse($exception->getMessage(),422);
+        }catch (\Exception $exception){
+            Log::error('Failed to adjust stock', ['id' => $id, 'error' => $exception->getMessage()]);
+            return $this->errorResponse('Failed to adjust stock.', 500);
+        }
+    }
+    public function lowStock(): JsonResponse
+    {
+        try {
+            $products = $this->repository->getLowStock();
+            return $this->successResponse(ProductResource::collection($products),"Low stock products retrieved successfully.");
+        }catch (\Throwable $exception){
+            Log::error('Failed to retrieve low-stock products', ['error' => $exception->getMessage()]);
+            return $this->errorResponse('Failed to retrieve low-stock products.', 500);
         }
     }
     private function invalidateCache(): void

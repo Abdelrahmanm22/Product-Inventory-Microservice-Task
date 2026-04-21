@@ -6,6 +6,7 @@ use App\Enums\ProductStatus;
 use App\Models\Product;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 class ProductRepository implements ProductRepositoryInterface
 {
     public function getAll(array $filters = []): LengthAwarePaginator
@@ -35,5 +36,9 @@ class ProductRepository implements ProductRepositoryInterface
     {
         $product = Product::findOrFail($id);
         return $product->delete();
+    }
+    public function getLowStock():Collection
+    {
+        return Product::lowStock()->get();
     }
 }

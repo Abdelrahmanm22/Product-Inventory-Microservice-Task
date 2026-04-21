@@ -7,4 +7,7 @@ use App\Http\Controllers\Api\ProductController;
 //    return $request->user();
 //})->middleware('auth:sanctum');
 
+Route::post('products/{id}/stock', [ProductController::class, 'adjustStock']);
+Route::get('products/low-stock', [ProductController::class, 'lowStock']);
 Route::apiResource('products', ProductController::class);
+
